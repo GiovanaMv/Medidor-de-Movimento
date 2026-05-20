@@ -2,7 +2,7 @@
   "name": "medidor-movimento",
   "version": "0.0.0",
   "engines": {
-    "node": "22.x",
+    "node": "24.x",
     "npm": "10.x"
   },
   "scripts": {
