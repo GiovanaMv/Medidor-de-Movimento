@@ -3,103 +3,77 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-movimentometro',
-  standalone: true, // Usando standalone component (Angular 14+)
+  standalone: true,
   imports: [CommonModule],
-  templateUrl: './movimentometro.html',
-  styleUrls: ['./movimentometro.css']
+  templateUrl: './movimentometro.component.html',
+  styleUrls: ['./movimentometro.component.css']
 })
 export class MovimentometroComponent implements OnInit, OnDestroy {
-  // Variáveis principais
   passos = 0;
   estaAtivo = false;
-  estaMedindo = false;
   tipoAtividade: 'passos' | 'pulos' = 'passos';
 
-  // Dicas informativas
-  dicaAtual = '';
-  beneficios: string[] = [
-    '🧠 Melhora a memória e concentração!',
-    '😊 Libera endorfinas = felicidade imediata',
-    '💪 Fortalece coração e pulmões',
-    '🎯 Reduz ansiedade e estresse',
-    '🌙 Melhora qualidade do sono'
-  ];
-
-  // Metas diárias
-  metaDiaria = 8000;
-  metaAtingida = false;
-
-  // Configuração do sensor
   private sensibilidade = 15;
   private ultimoMovimento = 0;
-  private intervaloContagem?: any;
-
-  constructor() {
-    this.novaDica();
-  }
+  private deviceMotionHandler: ((event: DeviceMotionEvent) => void) | null = null;
 
   ngOnInit() {
-    // Verificar se o dispositivo suporta o sensor
-    if (!window.DeviceMotionEvent) {
-      alert('Seu dispositivo não suporta medição de movimento 😢');
-      return;
-    }
-
-    // Solicitar permissão no iOS
-    this.solicitarPermissao();
+    this.verificarSuporteSensor();
   }
 
   ngOnDestroy() {
     this.pararMedicao();
   }
 
-  // 🎯 Método principal: Iniciar medição
-  iniciarMedicao() {
-    if (!this.estaAtivo) {
-      this.estaAtivo = true;
-      this.passos = 0;
-      this.metaAtingida = false;
+  private verificarSuporteSensor() {
+    if (!window.DeviceMotionEvent) {
+      alert('Seu dispositivo não suporta medição de movimento 😢');
+      return;
+    }
+  }
 
-      // Registrar o evento de movimento
-      window.addEventListener('devicemotion', this.detectarMovimento.bind(this));
-
-      // Atualizar contador a cada segundo (apenas visual)
-      this.intervaloContagem = setInterval(() => {
-        if (this.estaAtivo && this.passos >= this.metaDiaria && !this.metaAtingida) {
-          this.metaAtingida = true;
-          this.parabenizar();
+  async iniciarMedicao() {
+    // Para iOS (iPhone)
+    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+      try {
+        const permission = await (DeviceMotionEvent as any).requestPermission();
+        if (permission === 'granted') {
+          this.ativarSensor();
         }
-      }, 1000);
-    }
-  }
-
-  // 🎯 Detector de movimento (o coração do sistema)
-  private detectarMovimento(event: DeviceMotionEvent) {
-    if (!this.estaAtivo) return;
-
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    // Calcula intensidade do movimento (Y = cima/baixo, X = lado)
-    const intensidade = Math.abs(acc.y || 0) + Math.abs(acc.x || 0);
-
-    // Evita múltiplos registros do mesmo movimento
-    const agora = Date.now();
-    if (intensidade > this.sensibilidade && (agora - this.ultimoMovimento) > 200) {
-      this.ultimoMovimento = agora;
-      this.passos++;
-
-      // Feedback visual vibrante
-      this.feedbackVisual();
-
-      // Mensagem motivacional a cada 100 passos
-      if (this.passos % 100 === 0) {
-        this.mensagemMotivacional();
+      } catch (error) {
+        console.error('Permissão negada', error);
       }
+    } else {
+      this.ativarSensor();
     }
   }
 
-  // 🎨 Feedback visual divertido
+  private ativarSensor() {
+    if (this.estaAtivo) return;
+
+    this.estaAtivo = true;
+    this.passos = 0;
+
+    // Cria o handler uma vez e mantém referência
+    this.deviceMotionHandler = (event: DeviceMotionEvent) => {
+      if (!this.estaAtivo) return;
+
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const intensidade = Math.abs(acc.y || 0) + Math.abs(acc.x || 0);
+      const agora = Date.now();
+
+      if (intensidade > this.sensibilidade && (agora - this.ultimoMovimento) > 200) {
+        this.ultimoMovimento = agora;
+        this.passos++;
+        this.feedbackVisual();
+      }
+    };
+
+    window.addEventListener('devicemotion', this.deviceMotionHandler);
+  }
+
   private feedbackVisual() {
     const container = document.querySelector('.medidor-container');
     if (container) {
@@ -108,62 +82,16 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🏆 Mensagens motivacionais
-  private mensagemMotivacional() {
-    const mensagens = [
-      '🚀 Voa, campeão!',
-      '💪 Tá arrasando!',
-      '🔥 Continue assim!',
-      '⭐ Você é fera!',
-      '🎯 Meta chegando perto!'
-    ];
-    const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
-    this.dicaAtual = msg;
-    setTimeout(() => this.novaDica(), 3000);
-  }
-
-  private parabenizar() {
-    this.dicaAtual = '🏆 VOCÊ VENCEU! Meta diária alcançada! 🏆';
-    this.estaAtivo = false;
-  }
-
   pararMedicao() {
-    this.estaAtivo = false;
-    window.removeEventListener('devicemotion', this.detectarMovimento.bind(this));
-    if (this.intervaloContagem) {
-      clearInterval(this.intervaloContagem);
+    if (this.deviceMotionHandler) {
+      window.removeEventListener('devicemotion', this.deviceMotionHandler);
+      this.deviceMotionHandler = null;
     }
+    this.estaAtivo = false;
   }
 
   resetar() {
     this.pararMedicao();
     this.passos = 0;
-    this.metaAtingida = false;
-    this.novaDica();
-  }
-
-  private novaDica() {
-    const indice = Math.floor(Math.random() * this.beneficios.length);
-    this.dicaAtual = this.beneficios[indice];
-  }
-
-  private solicitarPermissao() {
-    // Para iOS precisa de permissão explícita
-    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-      // Adicione isso para iOS 13+
-      document.body.addEventListener('click', () => {
-        (DeviceMotionEvent as any).requestPermission()
-          .then((permissionState: string) => {
-            if (permissionState === 'granted') {
-              console.log('Permissão concedida');
-              window.addEventListener('devicemotion', this.detectarMovimento.bind(this));
-            }
-          })
-          .catch(console.error);
-      }, { once: true });
-    } else {
-      // Para Android e outros
-      window.addEventListener('devicemotion', this.detectarMovimento.bind(this));
-    }
   }
 }
