@@ -1,0 +1,95 @@
+<div class="medidor-container">
+  <!-- Header divertido -->
+  <div class="header">
+    <h1>🏃‍♂️ Move-Mania! 🏃‍♀️</h1>
+    <p class="subtitulo">Mexa-se e veja a mágica acontecer ✨</p>
+  </div>
+
+  <!-- Card informativo principal -->
+  <div class="card-info">
+    <div class="beneficio-rapido">
+      <span class="icone">💡</span>
+      <span class="texto">{{ dicaAtual }}</span>
+    </div>
+  </div>
+
+  <!-- Contador principal -->
+  <div class="card-contador">
+    <div class="tipo-atividade">
+      <button
+        (click)="tipoAtividade = 'passos'"
+        [class.ativo]="tipoAtividade === 'passos'"
+        class="btn-tipo">
+        🦶 Passos
+      </button>
+      <button
+        (click)="tipoAtividade = 'pulos'"
+        [class.ativo]="tipoAtividade === 'pulos'"
+        class="btn-tipo">
+        🤸 Pulos
+      </button>
+    </div>
+
+    <div class="numero-grande">
+      {{ passos }}
+    </div>
+    <div class="unidade">
+      {{ tipoAtividade === 'passos' ? 'passos' : 'pulos' }}
+    </div>
+
+    <!-- Barra de progresso da meta -->
+    <div class="progresso">
+      <div class="barra" [style.width.%]="(passos / metaDiaria) * 100"></div>
+      <span class="meta-texto">
+        Meta: {{ metaDiaria }} {{ tipoAtividade === 'passos' ? 'passos' : 'pulos' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Botões de controle -->
+  <div class="controles">
+    <button
+      (click)="iniciarMedicao()"
+      [disabled]="estaAtivo"
+      class="btn btn-iniciar">
+      🎬 Iniciar
+    </button>
+
+    <button
+      (click)="pararMedicao()"
+      [disabled]="!estaAtivo"
+      class="btn btn-parar">
+      ⏸️ Parar
+    </button>
+
+    <button
+      (click)="resetar()"
+      class="btn btn-resetar">
+      🔄 Resetar
+    </button>
+  </div>
+
+  <!-- Dicas de saúde mental -->
+  <div class="dicas-saude">
+    <h3>🧠 Sabia que?</h3>
+    <div class="grid-dicas">
+      <div class="dica">
+        <strong>15 min</strong> de caminhada rápida 🧠 Melhoram a concentração
+      </div>
+      <div class="dica">
+        <strong>10 min</strong> de alongamento 🌟 Reduzem ansiedade
+      </div>
+      <div class="dica">
+        <strong>30 min/dia</strong> de atividade física 😊 Previnem depressão
+      </div>
+    </div>
+  </div>
+
+  <!-- Desafio diário gamificado -->
+  <div class="desafio" *ngIf="!metaAtingida && passos > 0">
+    <div class="mensagem-desafio">
+      {{ passos < metaDiaria/2 ? '🌱 Começou bem! Continue!' :
+         passos < metaDiaria ? '⚡ Quase lá! Mais um esforço!' : '🎉 Parabéns!' }}
+    </div>
+  </div>
+</div>
