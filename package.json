@@ -1,9 +1,9 @@
 {
   "name": "medidor-movimento",
   "version": "0.0.0",
-   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+  "engines": {
+    "node": "20.x",
+    "npm": "10.x"
   },
   "scripts": {
     "ng": "ng",
