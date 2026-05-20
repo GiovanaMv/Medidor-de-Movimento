@@ -17,13 +17,13 @@
   <div class="card-contador">
     <div class="tipo-atividade">
       <button
-        (click)="tipoAtividade = 'passos'"
+        (click)="trocarAtividade('passos')"
         [class.ativo]="tipoAtividade === 'passos'"
         class="btn-tipo">
         🦶 Passos
       </button>
       <button
-        (click)="tipoAtividade = 'pulos'"
+        (click)="trocarAtividade('pulos')"
         [class.ativo]="tipoAtividade === 'pulos'"
         class="btn-tipo">
         🤸 Pulos
@@ -31,7 +31,7 @@
     </div>
 
     <div class="numero-grande">
-      {{ passos }}
+      {{ contadorAtual }}
     </div>
     <div class="unidade">
       {{ tipoAtividade === 'passos' ? 'passos' : 'pulos' }}
@@ -39,9 +39,9 @@
 
     <!-- Barra de progresso da meta -->
     <div class="progresso">
-      <div class="barra" [style.width.%]="(passos / metaDiaria) * 100"></div>
+      <div class="barra" [style.width.%]="(contadorAtual / (tipoAtividade === 'passos' ? metaDiaria : 500)) * 100"></div>
       <span class="meta-texto">
-        Meta: {{ metaDiaria }} {{ tipoAtividade === 'passos' ? 'passos' : 'pulos' }}
+        Meta: {{ tipoAtividade === 'passos' ? metaDiaria : 500 }} {{ tipoAtividade === 'passos' ? 'passos' : 'pulos' }}
       </span>
     </div>
   </div>
@@ -86,10 +86,10 @@
   </div>
 
   <!-- Desafio diário gamificado -->
-  <div class="desafio" *ngIf="!metaAtingida && passos > 0">
+  <div class="desafio" *ngIf="!metaAtingida && contadorAtual > 0">
     <div class="mensagem-desafio">
-      {{ passos < metaDiaria/2 ? '🌱 Começou bem! Continue!' :
-         passos < metaDiaria ? '⚡ Quase lá! Mais um esforço!' : '🎉 Parabéns!' }}
+      {{ contadorAtual < (tipoAtividade === 'passos' ? metaDiaria/2 : 250) ? '🌱 Começou bem! Continue!' :
+         contadorAtual < (tipoAtividade === 'passos' ? metaDiaria : 500) ? '⚡ Quase lá! Mais um esforço!' : '🎉 Parabéns!' }}
     </div>
   </div>
 </div>

@@ -9,11 +9,20 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./movimentometro.css']
 })
 export class MovimentometroComponent implements OnInit, OnDestroy {
+  // ⭐ SEPARAMOS OS CONTADORES ⭐
   passos = 0;
-  estaAtivo = false;
+  pulos = 0;
+
+  // Qual atividade está ativa?
   tipoAtividade: 'passos' | 'pulos' = 'passos';
 
-  // ⭐ ADICIONEI ESSAS VARIÁVEIS QUE ESTAVAM FALTANDO ⭐
+  // Getter para mostrar o contador correto na tela
+  get contadorAtual(): number {
+    return this.tipoAtividade === 'passos' ? this.passos : this.pulos;
+  }
+
+  estaAtivo = false;
+
   dicaAtual = '🧠 Mexer o corpo libera endorfinas e melhora o humor!';
   metaDiaria = 8000;
   metaAtingida = false;
@@ -39,6 +48,14 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
     this.pararMedicao();
   }
 
+  // ⭐ MÉTODO PARA TROCAR DE ATIVIDADE ⭐
+  trocarAtividade(tipo: 'passos' | 'pulos') {
+    if (this.tipoAtividade === tipo) return;
+
+    this.tipoAtividade = tipo;
+    this.resetar(); // Reseta ao trocar
+  }
+
   private rotacionarDicas() {
     setInterval(() => {
       const indice = Math.floor(Math.random() * this.beneficios.length);
@@ -56,7 +73,6 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
   async iniciarMedicao() {
     if (this.estaAtivo) return;
 
-    // Para iOS (iPhone)
     if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
       try {
         const permission = await (DeviceMotionEvent as any).requestPermission();
@@ -75,7 +91,6 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
     if (this.estaAtivo) return;
 
     this.estaAtivo = true;
-    this.passos = 0;
     this.metaAtingida = false;
 
     this.deviceMotionHandler = (event: DeviceMotionEvent) => {
@@ -84,19 +99,35 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
       const acc = event.accelerationIncludingGravity;
       if (!acc) return;
 
+      // ⭐ Detecta INTENSIDADE do movimento ⭐
+      // Passos: movimento mais suave (pode ajustar sensibilidade)
+      // Pulos: movimento mais brusco
       const intensidade = Math.abs(acc.y || 0) + Math.abs(acc.x || 0);
       const agora = Date.now();
 
       if (intensidade > this.sensibilidade && (agora - this.ultimoMovimento) > 200) {
         this.ultimoMovimento = agora;
-        this.passos++;
-        this.feedbackVisual();
 
-        // Verifica se bateu a meta
-        if (this.passos >= this.metaDiaria && !this.metaAtingida) {
-          this.metaAtingida = true;
-          this.dicaAtual = '🏆 PARABÉNS! Você atingiu sua meta diária! 🏆';
+        // ⭐ Conta de acordo com a atividade selecionada ⭐
+        if (this.tipoAtividade === 'passos') {
+          this.passos++;
+
+          // Verifica meta de passos
+          if (this.passos >= this.metaDiaria && !this.metaAtingida) {
+            this.metaAtingida = true;
+            this.dicaAtual = '🏆 PARABÉNS! Você atingiu sua meta de passos! 🏆';
+          }
+        } else {
+          this.pulos++;
+
+          // Meta diferente para pulos (ex: 500 pulos)
+          if (this.pulos >= 500 && !this.metaAtingida) {
+            this.metaAtingida = true;
+            this.dicaAtual = '🏆 PARABÉNS! Você atingiu sua meta de pulos! 🏆';
+          }
         }
+
+        this.feedbackVisual();
       }
     };
 
@@ -122,6 +153,7 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
   resetar() {
     this.pararMedicao();
     this.passos = 0;
+    this.pulos = 0;
     this.metaAtingida = false;
   }
 }
