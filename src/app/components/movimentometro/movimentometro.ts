@@ -5,13 +5,26 @@ import { CommonModule } from '@angular/common';
   selector: 'app-movimentometro',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './movimentometro.component.html',
-  styleUrls: ['./movimentometro.component.css']
+  templateUrl: './movimentometro.html',
+  styleUrls: ['./movimentometro.css']
 })
 export class MovimentometroComponent implements OnInit, OnDestroy {
   passos = 0;
   estaAtivo = false;
   tipoAtividade: 'passos' | 'pulos' = 'passos';
+
+  // ⭐ ADICIONEI ESSAS VARIÁVEIS QUE ESTAVAM FALTANDO ⭐
+  dicaAtual = '🧠 Mexer o corpo libera endorfinas e melhora o humor!';
+  metaDiaria = 8000;
+  metaAtingida = false;
+
+  private beneficios = [
+    '🧠 Melhora a memória e concentração!',
+    '😊 Libera endorfinas = felicidade imediata',
+    '💪 Fortalece coração e pulmões',
+    '🎯 Reduz ansiedade e estresse',
+    '🌙 Melhora qualidade do sono'
+  ];
 
   private sensibilidade = 15;
   private ultimoMovimento = 0;
@@ -19,10 +32,18 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.verificarSuporteSensor();
+    this.rotacionarDicas();
   }
 
   ngOnDestroy() {
     this.pararMedicao();
+  }
+
+  private rotacionarDicas() {
+    setInterval(() => {
+      const indice = Math.floor(Math.random() * this.beneficios.length);
+      this.dicaAtual = this.beneficios[indice];
+    }, 8000);
   }
 
   private verificarSuporteSensor() {
@@ -33,6 +54,8 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
   }
 
   async iniciarMedicao() {
+    if (this.estaAtivo) return;
+
     // Para iOS (iPhone)
     if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
       try {
@@ -53,8 +76,8 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
 
     this.estaAtivo = true;
     this.passos = 0;
+    this.metaAtingida = false;
 
-    // Cria o handler uma vez e mantém referência
     this.deviceMotionHandler = (event: DeviceMotionEvent) => {
       if (!this.estaAtivo) return;
 
@@ -68,6 +91,12 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
         this.ultimoMovimento = agora;
         this.passos++;
         this.feedbackVisual();
+
+        // Verifica se bateu a meta
+        if (this.passos >= this.metaDiaria && !this.metaAtingida) {
+          this.metaAtingida = true;
+          this.dicaAtual = '🏆 PARABÉNS! Você atingiu sua meta diária! 🏆';
+        }
       }
     };
 
@@ -93,5 +122,6 @@ export class MovimentometroComponent implements OnInit, OnDestroy {
   resetar() {
     this.pararMedicao();
     this.passos = 0;
+    this.metaAtingida = false;
   }
 }
